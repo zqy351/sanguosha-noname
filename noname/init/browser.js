@@ -77,7 +77,17 @@ class BrowserAdapter {
    */
   async read(path) {
     assertValidPath(path);
-    const data = await requestBackend("/readFile", path, { fileName: path });
+    let data;
+    try {
+      data = await requestBackend("/readFile", path, { fileName: path });
+    } catch (error) {
+      // 无本地服务器后端时：降级为直接读取静态文件
+      const response = await fetch(path);
+      if (!response.ok) {
+        throw toFileSystemError(new Error(`Static file not found: ${path}`), path);
+      }
+      return new Uint8Array(await response.arrayBuffer());
+    }
     try {
       if (isByteArray(data)) {
         return new Uint8Array(data);
@@ -114,7 +124,19 @@ class BrowserAdapter {
    */
   async stat(path) {
     assertValidPath(path);
-    const type = await requestBackend("/checkFile", path, { fileName: path });
+    let type;
+    try {
+      type = await requestBackend("/checkFile", path, { fileName: path });
+    } catch (error) {
+      // 无本地服务器后端时：降级为检查静态文件是否存在
+      try {
+        const response = await fetch(path, { method: "HEAD" });
+        if (response.ok) {
+          return { type: "file" };
+        }
+      } catch (_) {}
+      return null;
+    }
     if (type === "file" || type === "directory") {
       return { type };
     }
@@ -126,7 +148,13 @@ class BrowserAdapter {
    */
   async list(path) {
     assertValidPath(path);
-    const data = await requestBackend("/getFileList", path, { dir: path });
+    let data;
+    try {
+      data = await requestBackend("/getFileList", path, { dir: path });
+    } catch (error) {
+      // 无本地服务器后端时：返回空列表（扩展功能降级）
+      return [];
+    }
     if (!isStringArray(data?.folders) || !isStringArray(data?.files)) {
       throw createFileSystemError(FileSystemErrorCode.IoError, path, "Invalid getFileList response data");
     }
