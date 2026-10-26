@@ -42,20 +42,25 @@
         window.location.reload();
       }
     });
-    if (sessionStorage.getItem("canUseTs") !== "true") {
-      const path = "./jit-test.ts";
-      console.log((await import(
-        /* @vite-ignore */
-        path
-      )).text);
-      sessionStorage.setItem("canUseTs", "true");
-    }
   } catch (e) {
     if (sessionStorage.getItem("canUseTs") === "false") {
       console.log("serviceWorker\u52A0\u8F7D\u5931\u8D25: ", e);
     } else {
       sessionStorage.setItem("canUseTs", "false");
       window.location.reload();
+    }
+  }
+  // 即时编译检测：失败仅标记不可用，不触发页面刷新
+  if (sessionStorage.getItem("canUseTs") !== "true") {
+    try {
+      const path = "./jit-test.ts";
+      console.log((await import(
+        /* @vite-ignore */
+        path
+      )).text);
+      sessionStorage.setItem("canUseTs", "true");
+    } catch {
+      sessionStorage.setItem("canUseTs", "false");
     }
   }
 })();
@@ -342,7 +347,7 @@
   <script type="module" crossorigin src="./noname/library/element/index.js"></script>
   <script type="module" crossorigin src="./noname/ui/create/menu/pages/exetensionMenu.js"></script>
   <script type="module" crossorigin src="./noname/ui/create/menu/pages/optionsMenu.js"></script>
-  <script type="module" crossorigin src="vue"></script>
+  
   <script type="module" crossorigin src="./noname/util/meta.js"></script>
   <script type="module" crossorigin src="./noname/ui/create/menu/pages/otherMenu.js"></script>
   <script type="module" crossorigin src="./noname/ui/create/menu/pages/startMenu.js"></script>
@@ -365,8 +370,8 @@
   <script type="module" crossorigin src="./noname/library/experimental/index.js"></script>
   <script type="module" crossorigin src="./noname/library/update-urls.js"></script>
   <script type="module" crossorigin src="./noname/library/hooks/index.js"></script>
-  <script type="module" crossorigin src="vue"></script>
-  <script type="module" crossorigin src="vue"></script>
+  
+  
   <script type="module" crossorigin src="./noname/init/onload/OnloadSplash.vue2.js"></script>
   <script type="module" crossorigin src="./noname/init/onload/OnloadSplash.vue.js"></script>
   <script type="module" crossorigin src="./noname/init/onload/default-splash.js"></script>
@@ -381,7 +386,7 @@
   <script type="module" crossorigin src="./noname/library/help/about-game.js"></script>
   <script type="module" crossorigin src="./noname/library/help/game-controls.js"></script>
   <script type="module" crossorigin src="./noname/library/help/game-api.js"></script>
-  <script type="module" crossorigin src="vue"></script>
+  
   <script type="module" crossorigin src="./noname/library/help/GamePoptip.vue2.js"></script>
   <script type="module" crossorigin src="./_virtual/_plugin-vue_export-helper.js"></script>
   <script type="module" crossorigin src="./noname/library/help/GamePoptip.vue.js"></script>
