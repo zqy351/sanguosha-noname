@@ -43,7 +43,7 @@
       }
     });
     if (sessionStorage.getItem("canUseTs") !== "true") {
-      const path = "/jit-test.ts";
+      const path = "./jit-test.ts";
       console.log((await import(
         /* @vite-ignore */
         path
