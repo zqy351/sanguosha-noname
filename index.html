@@ -21,7 +21,7 @@
     return;
   }
   if (!("serviceWorker" in navigator)) {
-    alert(globalText.SERVICE_WORKER_NOT_SUPPORT);
+    console.warn("当前环境不支持 serviceWorker：即时编译/扩展加载功能不可用，核心游戏可正常游玩。");
     return;
   }
   if (sessionStorage.getItem("isJITReloaded") !== "true") {
