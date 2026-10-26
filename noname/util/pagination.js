@@ -1,4 +1,4 @@
-import dedent from "../../node_modules/.pnpm/dedent@1.7.1/node_modules/dedent/dist/dedent.js";
+import dedent from "../../node_modules/_pnpm/dedent@1.7.1/node_modules/dedent/dist/dedent.js";
 import "../../noname.js";
 import { lib } from "../library/index.js";
 class Pagination {

@@ -3,7 +3,7 @@ import compiler from "../library/element/GameEvent/compilers/ContentCompiler.js"
 import ContentCompilerBase from "../library/element/GameEvent/compilers/ContentCompilerBase.js";
 import { GeneratorFunction, AsyncFunction } from "../util/index.js";
 import "../util/sandbox.js";
-import dedent from "../../node_modules/.pnpm/dedent@1.7.1/node_modules/dedent/dist/dedent.js";
+import dedent from "../../node_modules/_pnpm/dedent@1.7.1/node_modules/dedent/dist/dedent.js";
 import { lib } from "../library/index.js";
 import { get } from "../get/index.js";
 import { _status } from "../status/index.js";

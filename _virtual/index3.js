@@ -1,5 +1,5 @@
 import { getDefaultExportFromCjs } from "./_commonjsHelpers.js";
-import { __require as requireSrc } from "../node_modules/.pnpm/nosleep.js@0.12.0/node_modules/nosleep.js/src/index.js";
+import { __require as requireSrc } from "../node_modules/_pnpm/nosleep.js@0.12.0/node_modules/nosleep.js/src/index.js";
 function _mergeNamespaces(n, m) {
   for (var i = 0; i < m.length; i++) {
     const e = m[i];

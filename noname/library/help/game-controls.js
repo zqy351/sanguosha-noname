@@ -1,4 +1,4 @@
-import dedent from "../../../node_modules/.pnpm/dedent@1.7.1/node_modules/dedent/dist/dedent.js";
+import dedent from "../../../node_modules/_pnpm/dedent@1.7.1/node_modules/dedent/dist/dedent.js";
 const gameControls = dedent`
 	<ul>
 		<li>长按/鼠标悬停/右键单击显示信息。</li>

@@ -4,7 +4,7 @@ import { ChildNodesWatcher } from "../cache/childNodesWatcher.js";
 import "../../util/sandbox.js";
 import "./gameEvent.js";
 import { AsyncFunction } from "../../util/index.js";
-import dedent from "../../../node_modules/.pnpm/dedent@1.7.1/node_modules/dedent/dist/dedent.js";
+import dedent from "../../../node_modules/_pnpm/dedent@1.7.1/node_modules/dedent/dist/dedent.js";
 import { ui } from "../../ui/index.js";
 import { lib } from "../index.js";
 import { game } from "../../game/index.js";

@@ -4,7 +4,7 @@ import { installLegacyFileSystemAPI } from "../library/fs/legacy.js";
 import { FileSystemErrorCode, FileSystemError } from "../library/fs/errors.js";
 async function browserReady({ lib, game }) {
   lib.path = (await __vitePreload(async () => {
-    const { default: __vite_default__ } = await import("../../node_modules/.pnpm/path-browserify-esm@1.0.6/node_modules/path-browserify-esm/index.esm.js");
+    const { default: __vite_default__ } = await import("../../node_modules/_pnpm/path-browserify-esm@1.0.6/node_modules/path-browserify-esm/index.esm.js");
     return { default: __vite_default__ };
   }, true ? [] : void 0, import.meta.url)).default;
   const adpt = new BrowserAdapter();

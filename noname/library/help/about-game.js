@@ -1,4 +1,4 @@
-import dedent from "../../../node_modules/.pnpm/dedent@1.7.1/node_modules/dedent/dist/dedent.js";
+import dedent from "../../../node_modules/_pnpm/dedent@1.7.1/node_modules/dedent/dist/dedent.js";
 const aboutGame = dedent`
 	<div style="margin:10px">关于无名杀</div>
 	<ul style="margin-top:0">
