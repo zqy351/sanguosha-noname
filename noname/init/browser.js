@@ -82,7 +82,7 @@ class BrowserAdapter {
       data = await requestBackend("/readFile", path, { fileName: path });
     } catch (error) {
       // 无本地服务器后端时：降级为直接读取静态文件
-      const response = await fetch(path);
+      const response = await fetch(path, { signal: AbortSignal.timeout(8000) });
       if (!response.ok) {
         throw toFileSystemError(new Error(`Static file not found: ${path}`), path);
       }
@@ -130,7 +130,7 @@ class BrowserAdapter {
     } catch (error) {
       // 无本地服务器后端时：降级为检查静态文件是否存在
       try {
-        const response = await fetch(path, { method: "HEAD" });
+        const response = await fetch(path, { method: "HEAD", signal: AbortSignal.timeout(8000) });
         if (response.ok) {
           return { type: "file" };
         }
@@ -275,7 +275,7 @@ async function requestBackend(route, path, query, init) {
   const queryString = query ? `?${new URLSearchParams(query)}` : "";
   let response;
   try {
-    response = await fetch(`${route}${queryString}`, init);
+    response = await fetch(`${route}${queryString}`, { ...init, signal: AbortSignal.timeout(8000) });
   } catch (error) {
     throw toFileSystemError(error, path);
   }

@@ -49,16 +49,29 @@ async function importFunction(type, path) {
     // 根相对路径：转换为基于页面根的完整 URL（适配子路径部署）
     resolvedPath = new URL(path.slice(1), document.baseURI).href;
   }
-  const modeContent = await import(
-    /* @vite-ignore */
-    resolvedPath + ".js"
-  ).catch(async (e) => {
+  // 动态导入加超时与重试：慢网/HTTP2 断流时自动恢复，避免启动挂起
+  const importWithRetry = async (suffix) => {
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        return await Promise.race([
+          import(
+            /* @vite-ignore */
+            resolvedPath + suffix
+          ),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error(`import timeout: ${resolvedPath}${suffix}`)), 30000)
+          )
+        ]);
+      } catch (error) {
+        if (attempt === 3) throw error;
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+      }
+    }
+  };
+  const modeContent = await importWithRetry(".js").catch(async (e) => {
     if (window.isSecureContext) {
       try {
-        return await import(
-          /* @vite-ignore */
-          resolvedPath + ".ts"
-        );
+        return await importWithRetry(".ts");
       } catch {
         throw e;
       }
