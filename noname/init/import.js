@@ -44,15 +44,20 @@ async function importMode(name) {
   await importFunction("mode", path);
 }
 async function importFunction(type, path) {
+  let resolvedPath = path;
+  if (path.startsWith("/")) {
+    // 根相对路径：转换为基于页面根的完整 URL（适配子路径部署）
+    resolvedPath = new URL(path.slice(1), document.baseURI).href;
+  }
   const modeContent = await import(
     /* @vite-ignore */
-    path + ".js"
+    resolvedPath + ".js"
   ).catch(async (e) => {
     if (window.isSecureContext) {
       try {
         return await import(
           /* @vite-ignore */
-          path + ".ts"
+          resolvedPath + ".ts"
         );
       } catch {
         throw e;
