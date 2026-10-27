@@ -1,6 +1,27 @@
 <!doctype html>
 
 <head>
+  <style>
+    #noname-loading {
+      position: fixed; inset: 0; z-index: 99999;
+      background: #14161c; display: flex;
+      flex-direction: column; align-items: center; justify-content: center;
+      color: #d8c9a3; font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+      transition: opacity .4s;
+    }
+    #noname-loading.hide { opacity: 0; pointer-events: none; }
+    #noname-loading .logo { font-size: 30px; letter-spacing: 12px; margin-bottom: 34px; font-weight: 700; text-shadow: 0 0 18px rgba(216,201,163,.45); }
+    #noname-loading .ring { width: 54px; height: 54px; border: 4px solid rgba(216,201,163,.18); border-top-color: #d8c9a3; border-radius: 50%; animation: nl-spin 1s linear infinite; }
+    #noname-loading .hint { margin-top: 28px; font-size: 14px; opacity: .75; letter-spacing: 2px; }
+    #noname-loading .sub { margin-top: 10px; font-size: 12px; opacity: .5; }
+    @keyframes nl-spin { to { transform: rotate(360deg); } }
+  </style>
+  <div id="noname-loading">
+    <div class="logo">无 名 杀</div>
+    <div class="ring"></div>
+    <div class="hint">正在加载游戏资源…</div>
+    <div class="sub">首次加载约需 1-3 分钟，请耐心等待</div>
+  </div>
   <script type="importmap">{
   "imports": {
     "noname": "./noname.js",

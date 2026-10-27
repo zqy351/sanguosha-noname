@@ -17,6 +17,12 @@ import { _status } from "../status/index.js";
 import { initializeSandboxRealms } from "../util/sandbox/initRealms.js";
 import { security } from "../util/sandbox/security.js";
 async function boot() {
+  // 隐藏加载动画（游戏代码已加载完成，进入 splash/游戏界面）
+  const loadingNode = document.getElementById("noname-loading");
+  if (loadingNode) {
+    loadingNode.classList.add("hide");
+    setTimeout(() => loadingNode.remove(), 600);
+  }
   if (typeof __dirname === "string" && __dirname.length) {
     const dirsplit = __dirname.split("/");
     for (let i = 0; i < dirsplit.length; i++) {
