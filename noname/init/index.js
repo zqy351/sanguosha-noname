@@ -594,6 +594,19 @@ async function getExtensionList() {
   const toLoad = [];
   toLoad.addArray(get$1("plays").filter((i) => get$1("all").plays.includes(i)));
   toLoad.addArray(extensions);
+  // 静态托管（GitHub Pages）无法扫描扩展目录，硬编码确保本地扩展被自动加载
+  const builtinExtensions = ["shicaozhi"];
+  for (const builtin of builtinExtensions) {
+    if (!extensions.includes(builtin)) {
+      extensions.push(builtin);
+      toLoad.push(builtin);
+    }
+    // 直接确保启用（默认的异步写入可能在 loadExtension 检查时还未完成）
+    if (lib.config[`extension_${builtin}_enable`] !== true) {
+      lib.config[`extension_${builtin}_enable`] = true;
+      await game.promises.saveConfig(`extension_${builtin}_enable`, true);
+    }
+  }
   if (autoImport) {
     const extensionPath = new URL("./extension/", rootURL);
     const [extFolders] = await game.promises.getFileList(get.relativePath(extensionPath));
