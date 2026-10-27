@@ -28,6 +28,17 @@ class DefaultSplash {
       click: this.click.bind(this)
     });
     this.app.mount(node);
+    // 兜底：若 vue 组件渲染失败（splash 空内容），2 秒后显示“点击进入游戏”并绑定点击，避免卡死在纯背景界面
+    setTimeout(() => {
+      if (node.children.length === 0) {
+        node.dataset.fallback = "1";
+        const tip = document.createElement("div");
+        tip.textContent = "点击进入游戏";
+        tip.style.cssText = "position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;color:#d8c9a3;font-size:26px;letter-spacing:6px;text-shadow:0 2px 10px rgba(0,0,0,.7);z-index:9";
+        node.appendChild(tip);
+        node.addEventListener("click", () => this.resolve(lib.config.mode));
+      }
+    }, 2000);
     if (lib.config.mousewheel) {
       node.addEventListener("wheel", ui.click.mousewheel);
     }

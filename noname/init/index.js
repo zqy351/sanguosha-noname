@@ -17,12 +17,27 @@ import { _status } from "../status/index.js";
 import { initializeSandboxRealms } from "../util/sandbox/initRealms.js";
 import { security } from "../util/sandbox/security.js";
 async function boot() {
-  // 隐藏加载动画（游戏代码已加载完成，进入 splash/游戏界面）
-  const loadingNode = document.getElementById("noname-loading");
-  if (loadingNode) {
-    loadingNode.classList.add("hide");
-    setTimeout(() => loadingNode.remove(), 600);
-  }
+  // 加载动画工具：全程守护启动过程（show/hide/remove）
+  const nlSet = (mode, text) => {
+    const el = document.getElementById("noname-loading");
+    if (!el) return;
+    if (mode === "show") {
+      el.classList.remove("hide");
+      if (text) {
+        const h = el.querySelector(".hint");
+        if (h) h.textContent = text;
+      }
+    } else {
+      el.classList.add("hide");
+    }
+  };
+  const nlRemove = () => {
+    const el = document.getElementById("noname-loading");
+    if (el) {
+      el.classList.add("hide");
+      setTimeout(() => el.remove(), 600);
+    }
+  };
   if (typeof __dirname === "string" && __dirname.length) {
     const dirsplit = __dirname.split("/");
     for (let i = 0; i < dirsplit.length; i++) {
@@ -446,7 +461,11 @@ async function boot() {
     let node = ui.create.div("#splash", document.body);
     let { promise, resolve } = Promise.withResolvers();
     await splash.init(node, resolve);
+    // splash 已可交互，隐藏加载动画
+    nlSet("hide");
     let result = await promise;
+    // 用户已选择模式，重新显示加载动画（进入游戏数据加载阶段）
+    nlSet("show", "正在进入游戏，加载数据中…");
     let splashInRemoing = await splash.dispose(node);
     if (!splashInRemoing) {
       node.remove();
@@ -533,6 +552,8 @@ async function boot() {
   }
   ui.create.arena();
   game.createEvent("game", false).setContent(lib.init.start);
+  // 游戏主界面就绪，最终移除加载动画
+  nlRemove();
   if (lib.mode[lib.config.mode] && lib.mode[lib.config.mode].fromextension) {
     const startstr = currentMode.start.toString();
     if (startstr.indexOf("onfree") === -1) {
