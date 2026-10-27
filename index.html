@@ -14,14 +14,44 @@
     #noname-loading .ring { width: 54px; height: 54px; border: 4px solid rgba(216,201,163,.18); border-top-color: #d8c9a3; border-radius: 50%; animation: nl-spin 1s linear infinite; }
     #noname-loading .hint { margin-top: 28px; font-size: 14px; opacity: .75; letter-spacing: 2px; }
     #noname-loading .sub { margin-top: 10px; font-size: 12px; opacity: .5; }
+    #noname-loading .bar-wrap { margin-top: 24px; width: 300px; max-width: 72vw; height: 6px; background: rgba(216,201,163,.15); border-radius: 3px; overflow: hidden; }
+    #noname-loading .bar { width: 0%; height: 100%; background: linear-gradient(90deg, #b8a878, #d8c9a3); border-radius: 3px; transition: width .3s; }
+    #noname-loading .mb { margin-top: 10px; font-size: 13px; opacity: .85; letter-spacing: 1px; font-variant-numeric: tabular-nums; }
     @keyframes nl-spin { to { transform: rotate(360deg); } }
   </style>
   <div id="noname-loading">
     <div class="logo">无 名 杀</div>
     <div class="ring"></div>
     <div class="hint">正在加载游戏资源…</div>
+    <div class="bar-wrap"><div class="bar" id="nl-bar"></div></div>
+    <div class="mb" id="nl-mb">已加载 0 MB</div>
     <div class="sub">首次加载约需 1-3 分钟，请耐心等待</div>
   </div>
+  <script>
+    // 资源下载进度统计：累加已传输字节并刷新进度条
+    (function () {
+      var total = 616 * 1024 * 1024; // 预估资源总量（代码+素材），仅用于进度条参考
+      var loaded = 0;
+      var last = 0;
+      function refresh() {
+        var bar = document.getElementById("nl-bar");
+        var mb = document.getElementById("nl-mb");
+        if (bar) bar.style.width = Math.min(100, loaded / total * 100) + "%";
+        if (mb) mb.textContent = "已加载 " + (loaded / 1024 / 1024).toFixed(0) + " MB";
+      }
+      try {
+        new PerformanceObserver(function (list) {
+          for (var i = 0; i < list.getEntries().length; i++) {
+            var e = list.getEntries()[i];
+            if (e.transferSize > 0) loaded += e.transferSize;
+          }
+          // 节流刷新
+          if (loaded - last > 512 * 1024) { last = loaded; refresh(); }
+        }).observe({ entryTypes: ["resource"] });
+      } catch (err) {}
+      refresh();
+    })();
+  </script>
   <script type="importmap">{
   "imports": {
     "noname": "./noname.js",
