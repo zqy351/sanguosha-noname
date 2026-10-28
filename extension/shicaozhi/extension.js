@@ -1,7 +1,8 @@
-import { game, get, lib, ui } from "noname";
+import { game, get, lib, ui, _status } from "noname";
 import { loadCharacter } from "../../noname/init/loading.js";
 
 // 自定义武将：势曹植（魏，4体力）—— 酒诗 / 七章 / 华
+// 注意：技能名加 scz_ 前缀，避免与官方一将成名曹植的 jiushi/jiushi1/jiushi3 重名冲突
 export const type = "extension";
 export default {
   name: "shicaozhi",
@@ -15,30 +16,30 @@ export default {
           sex: "male",
           group: "wei",
           hp: 4,
-          skills: ["jiushi", "qizhang", "hua"]
+          skills: ["scz_jiushi", "qizhang", "hua"]
         }
       },
       skill: {
-        // ========== 酒诗 ==========
-        jiushi: {
+        // ========== 酒诗（势曹植） ==========
+        scz_jiushi: {
           audio: 2,
-          group: ["jiushi1", "jiushi2", "jiushi3", "jiushi4"]
+          group: ["scz_jiushi_use", "scz_jiushi_turnback", "scz_jiushi_gain", "scz_jiushi_damage"]
         },
         // ① 需要使用酒时，正面朝上：翻面视为使用一张酒
-        jiushi1: {
+        scz_jiushi_use: {
           hiddenCard(player, name) {
             if (name == "jiu") return !player.isTurnedOver();
             return false;
           },
           audio: "jiushi",
           enable: "chooseToUse",
-          sourceSkill: "jiushi",
+          sourceSkill: "scz_jiushi",
           filter(event, player) {
             if (player.isTurnedOver()) return false;
             return event.filterCard({ name: "jiu", isCard: true }, player, event);
           },
           async content(event, trigger, player) {
-            if (event.getParent(2).type == "dying") {
+            if (_status.event.getParent(2).type == "dying") {
               event.dying = player;
               event.type = "dying";
             }
@@ -47,14 +48,14 @@ export default {
           }
         },
         // ② 受到伤害后，背面朝上且未因此次伤害发动过酒诗：翻面并视为使用一张酒
-        jiushi2: {
+        scz_jiushi_turnback: {
           audio: "jiushi",
           trigger: { player: "damageEnd" },
-          sourceSkill: "jiushi",
+          sourceSkill: "scz_jiushi",
           filter(event, player) {
             if (!player.isTurnedOver()) return false;
             if (player.hasHistory("useCard", (evt) => {
-              if (evt.card.name != "jiu" || evt.getParent().name != "jiushi1") return false;
+              if (evt.card.name != "jiu" || evt.getParent().name != "scz_jiushi_use") return false;
               return evt.getParent("damage", true) == event;
             })) return false;
             return true;
@@ -66,41 +67,49 @@ export default {
           }
         },
         // ③ 翻面后：获得牌堆中一张锦囊牌和一张基本牌
-        jiushi3: {
+        scz_jiushi_gain: {
           audio: "jiushi",
           trigger: { player: "turnOverAfter" },
-          sourceSkill: "jiushi",
+          sourceSkill: "scz_jiushi",
           forced: true,
           async content(event, trigger, player) {
-            const trick = ui.cardPile.filter((card) => get.type2(card) == "trick").randomGet();
-            const basic = ui.cardPile.filter((card) => get.type2(card) == "basic").randomGet();
+            const trick = get.cardPile2((card) => get.type2(card) == "trick", "random");
+            const basic = get.cardPile2((card) => get.type2(card) == "basic", "random");
             const cards = [trick, basic].filter(Boolean);
             if (cards.length) await player.gain(cards, "gain2", "log");
           }
         },
         // ④ 造成伤害时，背面朝上：翻回正面，本回合杀伤害基数+1
-        jiushi4: {
+        scz_jiushi_damage: {
           audio: "jiushi",
-          trigger: { player: "damageBegin" },
-          sourceSkill: "jiushi",
+          trigger: { source: "damageBegin1" },
+          sourceSkill: "scz_jiushi",
           filter(event, player) {
             return player.isTurnedOver() && event.card?.name == "sha";
           },
           prompt: "是否发动【酒诗】，翻回正面，本回合杀伤害基数+1？",
           async content(event, trigger, player) {
-            await player.turnOver();
+            // 直接切换翻面 class（避免在 trigger 阶段嵌套 turnOver 事件造成队列死锁）
+            if (player.isTurnedOver()) {
+              player.classList.remove("turnedover");
+              if (player.update) player.update();
+            }
+            // 本次伤害 +1
             trigger.num++;
-            player.addTempSkill("jiushi4_damage", "turnEnd");
+            // 本回合内后续杀伤害基数 +1（useCard 时 baseDamage++）
+            player.addTempSkill("scz_jiushi_damage_buff", "phaseAfter");
           }
         },
-        jiushi4_damage: {
+        scz_jiushi_damage_buff: {
           temp: true,
-          mod: {
-            damage: {
-              add(card, player, num) {
-                if (card.name == "sha") return 1;
-              }
-            }
+          trigger: { source: "useCard" },
+          filter(event, player) {
+            return event.card?.name == "sha";
+          },
+          forced: true,
+          content() {
+            trigger.baseDamage++;
+            game.log("势曹植的【酒诗】使", trigger.card, "的伤害值基数+1");
           }
         },
         // ========== 七章（限定技） ==========
@@ -109,33 +118,35 @@ export default {
           limited: true,
           enable: "phaseUse",
           usable: 1,
+          skillAnimation: true,
+          animationColor: "wood",
+          contentBefore(event, trigger, player) {
+            player.awakenSkill(event.skill);
+          },
           filter(event, player) {
             return player.hp > 1;
           },
           async content(event, trigger, player) {
             await player.loseHp(1);
-            const seal = "qizhang_seal_" + player.playerid;
+            // 本回合其他角色技能失效（tempBanSkill 会连带 group 子技能一并失效）
             for (const target of game.filterPlayer()) {
               if (target == player) continue;
               for (const sk of target.getSkills()) {
-                if (!target.disabledSkills[sk]?.includes(seal)) {
-                  target.disableSkill(seal, sk);
-                }
+                target.tempBanSkill(sk, "forever");
               }
             }
-            player.addTempSkill(["qizhang_seal", "qizhang_club"], "turnEnd");
+            // 势曹植回合结束（phaseAfter）时统一解除封印
+            player.addTempSkill(["qizhang_unseal", "qizhang_club"], "phaseAfter");
           }
         },
-        // 回合结束时恢复被封印的技能
-        qizhang_seal: {
+        qizhang_unseal: {
           temp: true,
-          onRemove(player) {
-            const seal = "qizhang_seal_" + player.playerid;
+          onremove(player) {
             for (const target of game.filterPlayer()) {
               if (target == player) continue;
-              for (const sk in target.disabledSkills) {
-                if (target.disabledSkills[sk].includes(seal)) {
-                  target.enableSkill(sk);
+              for (const key of Object.keys(target.storage)) {
+                if (key.startsWith("temp_ban_") && target.storage[key] === true) {
+                  delete target.storage[key];
                 }
               }
             }
@@ -179,17 +190,17 @@ export default {
       translate: {
         shicaozhi: "势曹植",
         shicaozhi_ab: "野心初露",
-        jiushi: "酒诗",
-        jiushi1: "酒诗",
-        jiushi2: "酒诗",
-        jiushi3: "酒诗",
-        jiushi4: "酒诗",
-        jiushi4_damage: "酒诗",
+        scz_jiushi: "酒诗",
+        scz_jiushi_use: "酒诗",
+        scz_jiushi_turnback: "酒诗",
+        scz_jiushi_gain: "酒诗",
+        scz_jiushi_damage: "酒诗",
+        scz_jiushi_damage_buff: "酒诗",
         qizhang: "七章",
-        qizhang_seal: "七章",
+        qizhang_unseal: "七章",
         qizhang_club: "七章",
         hua: "华",
-        jiushi_info:
+        scz_jiushi_info:
           "①当你需要使用酒时，若你的武将牌正面朝上，你可以翻面，视为使用一张酒；<br>" +
           "②当你受到伤害后，若你的武将牌背面朝上且你未因此次伤害发动过酒诗，你可以翻面并视为使用一张酒；<br>" +
           "③当你翻面后，你获得牌堆中一张锦囊牌和一张基本牌；<br>" +
