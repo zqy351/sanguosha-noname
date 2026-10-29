@@ -76,11 +76,19 @@
     return;
   }
   if (sessionStorage.getItem("isJITReloaded") !== "true") {
-    let registrations = await navigator.serviceWorker.getRegistrations();
-    await registrations.find((registration) => registration?.active?.scriptURL == `${scope}service-worker.js`)?.unregister();
+    try {
+      let registrations = await navigator.serviceWorker.getRegistrations();
+      await registrations.find((registration) => registration?.active?.scriptURL == `${scope}service-worker.js`)?.unregister();
+    } catch (e) {
+      // file:// / WebView 本地模式：SW 不可用，跳过 JIT 清理，直接进游戏
+      console.warn("SW 不可用（本地模式），跳过 JIT reload:", e && e.message);
+    }
     sessionStorage.setItem("isJITReloaded", "true");
-    window.location.reload();
-    return;
+    sessionStorage.setItem("canUseTs", "false");
+    if (location.protocol === "http:" || location.protocol === "https:") {
+      window.location.reload();
+      return;
+    }
   }
   try {
     await navigator.serviceWorker.register(`${scope}service-worker.js`, {
