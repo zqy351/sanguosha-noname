@@ -50,6 +50,12 @@
         }).observe({ entryTypes: ["resource"] });
       } catch (err) {}
       refresh();
+      // 本地打包模式（file:// / WebView 虚拟 scheme）：资源已在包内，不需要进度条，
+      // 3 秒后自动隐藏 splash，让游戏自己加载
+      setTimeout(function () {
+        var l = document.getElementById("noname-loading");
+        if (l) l.style.display = "none";
+      }, 3000);
     })();
   </script>
   <script type="importmap">{
